@@ -13,8 +13,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 
 from pymoveit2 import MoveIt2, MoveIt2State
-from pymoveit2.robots import tiangong as robot
-import math
+from pymoveit2.robots import elite as robot
 
 
 def main():
@@ -30,7 +29,6 @@ def main():
             0.0,
             0.0,
             0.0,
-            -math.pi / 2,
             0.0,
             0.0,
             0.0,

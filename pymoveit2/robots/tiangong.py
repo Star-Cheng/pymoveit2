@@ -1,6 +1,6 @@
 from typing import List
 
-MOVE_GROUP_ARM: str = "humanoid_left_arm"
+MOVE_GROUP_ARM: str = "left_arm_group"
 MOVE_GROUP_GRIPPER: str = "gripper"
 
 OPEN_GRIPPER_JOINT_POSITIONS: List[float] = [0.04, 0.04]
@@ -9,7 +9,6 @@ CLOSED_GRIPPER_JOINT_POSITIONS: List[float] = [0.0, 0.0]
 
 def joint_names(prefix: str = "") -> List[str]:
     return [
-        prefix + "waist_yaw_joint",
         prefix + "shoulder_pitch_l_joint",
         prefix + "shoulder_roll_l_joint",
         prefix + "shoulder_yaw_l_joint",
@@ -21,7 +20,7 @@ def joint_names(prefix: str = "") -> List[str]:
 
 
 def base_link_name(prefix: str = "") -> str:
-    return prefix + "waist_yaw_link"
+    return prefix + "world"
 
 
 def end_effector_name(prefix: str = "") -> str:
