@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Example of moving to a joint configuration.
-- ros2 run pymoveit2 ex_joint_goal.py --ros-args -p joint_positions:="[1.57, -1.57, 0.0, -1.57, 0.0, 1.57, 0.7854]"
-- ros2 run pymoveit2 ex_joint_goal.py --ros-args -p joint_positions:="[1.57, -1.57, 0.0, -1.57, 0.0, 1.57, 0.7854]" -p synchronous:=False -p cancel_after_secs:=1.0
-- ros2 run pymoveit2 ex_joint_goal.py --ros-args -p joint_positions:="[1.57, -1.57, 0.0, -1.57, 0.0, 1.57, 0.7854]" -p synchronous:=False -p cancel_after_secs:=0.0
+Example of moving to a pose goal.
+- ros2 run pymoveit2 ex_pose_goal.py --ros-args -p position:="[0.25, 0.0, 1.0]" -p quat_xyzw:="[0.0, 0.0, 0.0, 1.0]" -p cartesian:=False
+- ros2 run pymoveit2 ex_pose_goal.py --ros-args -p position:="[0.25, 0.0, 1.0]" -p quat_xyzw:="[0.0, 0.0, 0.0, 1.0]" -p cartesian:=False -p synchronous:=False -p cancel_after_secs:=1.0
+- ros2 run pymoveit2 ex_pose_goal.py --ros-args -p position:="[0.25, 0.0, 1.0]" -p quat_xyzw:="[0.0, 0.0, 0.0, 1.0]" -p cartesian:=False -p synchronous:=False -p cancel_after_secs:=0.0
 """
 
 from threading import Thread
@@ -14,41 +14,33 @@ from rclpy.node import Node
 
 from pymoveit2 import MoveIt2, MoveIt2State
 from pymoveit2.robots import tiangong as robot
-import math
 
 
 def main():
     rclpy.init()
 
     # Create node for this example
-    node = Node("ex_joint_goal")
+    node = Node("ex_pose_goal")
 
-    # Declare parameter for joint positions
-    node.declare_parameter(
-        "joint_positions",
-        [
-            0.0,
-            0.0,
-            0.0,
-            -math.pi / 2,
-            0.0,
-            0.0,
-            0.0,
-        ],
-    )
+    # Declare parameters for position and orientation
+    node.declare_parameter("position", [0.28298403, 0.24302717, 0.06437022])
+    node.declare_parameter("quat_xyzw", [0.03085568, -0.70615245, -0.03083112, 0.706715])
     node.declare_parameter("synchronous", True)
     # If non-positive, don't cancel. Only used if synchronous is False
     node.declare_parameter("cancel_after_secs", 0.0)
     # Planner ID
     node.declare_parameter("planner_id", "RRTConnectkConfigDefault")
+    # Declare parameters for cartesian planning
+    node.declare_parameter("cartesian", False)
+    node.declare_parameter("cartesian_max_step", 0.0025)
+    node.declare_parameter("cartesian_fraction_threshold", 0.0)
+    node.declare_parameter("cartesian_jump_threshold", 0.0)
+    node.declare_parameter("cartesian_avoid_collisions", False)
 
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
 
     # Create MoveIt 2 interface
-    print(robot.joint_names())
-    print(robot.base_link_name())
-    print(robot.end_effector_name())
     moveit2 = MoveIt2(
         node=node,
         joint_names=robot.joint_names(),
@@ -57,10 +49,7 @@ def main():
         group_name=robot.MOVE_GROUP_ARM,
         callback_group=callback_group,
     )
-    print("#################################################################")
-    moveit2.planner_id = (
-        node.get_parameter("planner_id").get_parameter_value().string_value
-    )
+    moveit2.planner_id = node.get_parameter("planner_id").get_parameter_value().string_value
 
     # Spin the node in background thread(s) and wait a bit for initialization
     executor = rclpy.executors.MultiThreadedExecutor(2)
@@ -68,24 +57,35 @@ def main():
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
     node.create_rate(1.0).sleep()
+
     # Scale down velocity and acceleration of joints (percentage of maximum)
     moveit2.max_velocity = 0.5
     moveit2.max_acceleration = 0.5
 
     # Get parameters
-    joint_positions = (
-        node.get_parameter("joint_positions").get_parameter_value().double_array_value
-    )
+    position = node.get_parameter("position").get_parameter_value().double_array_value
+    quat_xyzw = node.get_parameter("quat_xyzw").get_parameter_value().double_array_value
     synchronous = node.get_parameter("synchronous").get_parameter_value().bool_value
-    cancel_after_secs = (
-        node.get_parameter("cancel_after_secs").get_parameter_value().double_value
-    )
+    cancel_after_secs = node.get_parameter("cancel_after_secs").get_parameter_value().double_value
+    cartesian = node.get_parameter("cartesian").get_parameter_value().bool_value
+    cartesian_max_step = node.get_parameter("cartesian_max_step").get_parameter_value().double_value
+    cartesian_fraction_threshold = node.get_parameter("cartesian_fraction_threshold").get_parameter_value().double_value
+    cartesian_jump_threshold = node.get_parameter("cartesian_jump_threshold").get_parameter_value().double_value
+    cartesian_avoid_collisions = node.get_parameter("cartesian_avoid_collisions").get_parameter_value().bool_value
 
-    # Move to joint configuration
-    node.get_logger().info(f"Moving to {{joint_positions: {list(joint_positions)}}}")
-    print("#################################################################")
-    moveit2.move_to_configuration(joint_positions)
-    print("----------------------------------------------------------------")
+    # Set parameters for cartesian planning
+    moveit2.cartesian_avoid_collisions = cartesian_avoid_collisions
+    moveit2.cartesian_jump_threshold = cartesian_jump_threshold
+
+    # Move to pose
+    node.get_logger().info(f"Moving to {{position: {list(position)}, quat_xyzw: {list(quat_xyzw)}}}")
+    moveit2.move_to_pose(
+        position=position,
+        quat_xyzw=quat_xyzw,
+        cartesian=cartesian,
+        cartesian_max_step=cartesian_max_step,
+        cartesian_fraction_threshold=cartesian_fraction_threshold,
+    )
     if synchronous:
         # Note: the same functionality can be achieved by setting
         # `synchronous:=false` and `cancel_after_secs` to a negative value.

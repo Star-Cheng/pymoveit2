@@ -35,7 +35,7 @@ def main():
             0.7853981633974483,
         ],
     )
-    node.declare_parameter("synchronous", True)
+    node.declare_parameter("synchronous", False)
     # If non-positive, don't cancel. Only used if synchronous is False
     node.declare_parameter("cancel_after_secs", 0.0)
     # Planner ID
