@@ -12,7 +12,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 
 from pymoveit2 import MoveIt2, MoveIt2State
-from pymoveit2.robots import tiangong as robot
+from pymoveit2.robots import tiangong_right as robot
 
 
 def main():
@@ -22,8 +22,8 @@ def main():
     node = Node("ex_ik")
 
     # Declare parameters for position and orientation
-    node.declare_parameter("position", [0.28300000000000003, 0.24300892186492762, 0.06457884633379159])
-    node.declare_parameter("quat_xyzw", [0.030843401199199715, -0.7064337793469854, -0.030843401199199715, 0.7064337793469854])
+    node.declare_parameter("position", [0.32497879, -0.19681914, -0.06855335])
+    node.declare_parameter("quat_xyzw", [0.32497879, -0.19681914, -0.06855335, 0.65497752])
     node.declare_parameter("synchronous", False)
 
     # Create callback group that allows execution of callbacks in parallel without restrictions
@@ -68,7 +68,8 @@ def main():
     if retval is None:
         print("Failed.")
     else:
-        print("Succeeded. Result: " + str(retval))
+        # print("Succeeded. Result: " + str(retval))
+        print("position", retval.position)
 
     rclpy.shutdown()
     executor_thread.join()

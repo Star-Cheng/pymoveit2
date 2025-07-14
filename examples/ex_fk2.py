@@ -26,13 +26,13 @@ def main():
     node.declare_parameter(
         "joint_positions",
         [
-            0.0,
-            0.0,
-            0.0,
-            -math.pi / 2,
-            0.0,
-            0.0,
-            0.0,
+            -0.4157094955444336,
+            -0.15037822723388672,
+            0.2577095031738281,
+            -0.48166990280151367,
+            0.9909520149230957,
+            0.3322734832763672,
+            -0.610745906829834,
         ],
     )
     node.declare_parameter("synchronous", False)
@@ -80,7 +80,9 @@ def main():
     if retval is None:
         print("Failed.")
     else:
-        print("Succeeded. Result: " + str(retval))
+        # print("Succeeded. Result: " + str(retval))
+        print("position: ", retval.pose.position)
+        print("orientation: ", retval.pose.orientation)
 
     rclpy.shutdown()
     executor_thread.join()
